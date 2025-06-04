@@ -57,28 +57,48 @@ class _DropDownFieldState<T> extends State<_DropDownField<T>> {
   late List<T> selectedItems;
 
   @override
-  void initState() {
-    super.initState();
-    selectedItem = widget.selectedItemNotifier.value;
-    selectedItems = widget.selectedItemsNotifier.value;
-  }
-
-  Widget hintBuilder(BuildContext context) {
-    return widget.hintBuilder != null
-        ? widget.hintBuilder!(context, widget.hintText, widget.enabled)
-        : defaultHintBuilder(widget.hintText, widget.enabled);
-  }
-
-  Widget headerBuilder(BuildContext context) {
-    return widget.headerBuilder != null
-        ? widget.headerBuilder!(context, selectedItem as T, widget.enabled)
-        : defaultHeaderBuilder(oneItem: selectedItem);
-  }
-
-  Widget headerListBuilder(BuildContext context) {
-    return widget.headerListBuilder != null
-        ? widget.headerListBuilder!(context, selectedItems, widget.enabled)
-        : defaultHeaderBuilder(itemList: selectedItems);
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: Container(
+        padding: widget.headerPadding ?? _defaultHeaderPadding,
+        decoration: BoxDecoration(
+          color: widget.fillColor ??
+              (widget.enabled
+                  ? CustomDropdownDecoration._defaultFillColor
+                  : CustomDropdownDecoration._defaultFillColor.withOpacity(.5)),
+          border: widget.border,
+          borderRadius: widget.borderRadius ?? _defaultBorderRadius,
+          boxShadow: widget.shadow,
+        ),
+        child: Row(
+          children: [
+            if (widget.prefixIcon != null) ...[
+              widget.prefixIcon!,
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: switch (widget.dropdownType) {
+                _DropdownType.singleSelect => selectedItem != null
+                    ? headerBuilder(context)
+                    : hintBuilder(context),
+                _DropdownType.multipleSelect => selectedItems.isNotEmpty
+                    ? headerListBuilder(context)
+                    : hintBuilder(context),
+              },
+            ),
+            widget.suffixIcon ??
+                (widget.enabled
+                    ? _defaultOverlayIconDown
+                    : Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: Colors.black.withOpacity(.5),
+                        size: 20,
+                      )),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget defaultHeaderBuilder({T? oneItem, List<T>? itemList}) {
@@ -119,49 +139,28 @@ class _DropDownFieldState<T> extends State<_DropDownField<T>> {
     }
   }
 
+  Widget headerBuilder(BuildContext context) {
+    return widget.headerBuilder != null
+        ? widget.headerBuilder!(context, selectedItem as T, widget.enabled)
+        : defaultHeaderBuilder(oneItem: selectedItem);
+  }
+
+  Widget headerListBuilder(BuildContext context) {
+    return widget.headerListBuilder != null
+        ? widget.headerListBuilder!(context, selectedItems, widget.enabled)
+        : defaultHeaderBuilder(itemList: selectedItems);
+  }
+
+  Widget hintBuilder(BuildContext context) {
+    return widget.hintBuilder != null
+        ? widget.hintBuilder!(context, widget.hintText, widget.enabled)
+        : defaultHintBuilder(widget.hintText, widget.enabled);
+  }
+
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: Container(
-        padding: widget.headerPadding ?? _defaultHeaderPadding,
-        decoration: BoxDecoration(
-          color: widget.fillColor ??
-              (widget.enabled
-                  ? CustomDropdownDecoration._defaultFillColor
-                  : CustomDropdownDecoration._defaultFillColor.withOpacity(.5)),
-          border: widget.border,
-          borderRadius: widget.borderRadius ?? _defaultBorderRadius,
-          boxShadow: widget.shadow,
-        ),
-        child: Row(
-          children: [
-            if (widget.prefixIcon != null) ...[
-              widget.prefixIcon!,
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: switch (widget.dropdownType) {
-                _DropdownType.singleSelect => selectedItem != null
-                    ? headerBuilder(context)
-                    : hintBuilder(context),
-                _DropdownType.multipleSelect => selectedItems.isNotEmpty
-                    ? headerListBuilder(context)
-                    : hintBuilder(context),
-              },
-            ),
-            const SizedBox(width: 12),
-            widget.suffixIcon ??
-                (widget.enabled
-                    ? _defaultOverlayIconDown
-                    : Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: Colors.black.withOpacity(.5),
-                        size: 20,
-                      )),
-          ],
-        ),
-      ),
-    );
+  void initState() {
+    super.initState();
+    selectedItem = widget.selectedItemNotifier.value;
+    selectedItems = widget.selectedItemsNotifier.value;
   }
 }
