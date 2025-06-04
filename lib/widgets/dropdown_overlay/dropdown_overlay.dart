@@ -1,16 +1,16 @@
 part of '../../custom_dropdown.dart';
 
+const _defaultHeaderPadding = EdgeInsets.all(16.0);
+
+const _defaultListItemPadding =
+    EdgeInsets.symmetric(vertical: 12, horizontal: 16);
 const _defaultOverlayIconUp = Icon(
   Icons.keyboard_arrow_up_rounded,
   size: 20,
 );
-
-const _defaultHeaderPadding = EdgeInsets.all(16.0);
+const _defaultOverlayShadowOffset = Offset(0, 6);
 const _overlayOuterPadding =
     EdgeInsetsDirectional.only(bottom: 12, start: 12, end: 12);
-const _defaultOverlayShadowOffset = Offset(0, 6);
-const _defaultListItemPadding =
-    EdgeInsets.symmetric(vertical: 12, horizontal: 16);
 
 class _DropdownOverlay<T> extends StatefulWidget {
   final List<T> items;
@@ -90,166 +90,6 @@ class _DropdownOverlayState<T> extends State<_DropdownOverlay<T>> {
   late List<T> selectedItems;
   late ScrollController scrollController;
   final key1 = GlobalKey(), key2 = GlobalKey();
-
-  Widget hintBuilder(BuildContext context) {
-    return widget.hintBuilder != null
-        ? widget.hintBuilder!(context, widget.hintText, true)
-        : defaultHintBuilder(context, widget.hintText);
-  }
-
-  Widget headerBuilder(BuildContext context) {
-    return widget.headerBuilder != null
-        ? widget.headerBuilder!(context, selectedItem as T, true)
-        : defaultHeaderBuilder(context, item: selectedItem);
-  }
-
-  Widget headerListBuilder(BuildContext context) {
-    return widget.headerListBuilder != null
-        ? widget.headerListBuilder!(context, selectedItems, true)
-        : defaultHeaderBuilder(context, items: selectedItems);
-  }
-
-  Widget noResultFoundBuilder(BuildContext context) {
-    return widget.noResultFoundBuilder != null
-        ? widget.noResultFoundBuilder!(context, widget.noResultFoundText)
-        : defaultNoResultFoundBuilder(context, widget.noResultFoundText);
-  }
-
-  Widget defaultListItemBuilder(
-    BuildContext context,
-    T result,
-    bool isSelected,
-    VoidCallback onItemSelect,
-  ) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            result.toString(),
-            maxLines: widget.maxLines,
-            overflow: TextOverflow.ellipsis,
-            style: widget.listItemStyle ?? const TextStyle(fontSize: 16),
-          ),
-        ),
-        if (widget.dropdownType == _DropdownType.multipleSelect)
-          Padding(
-            padding: const EdgeInsetsDirectional.only(start: 12.0),
-            child: Checkbox(
-              onChanged: (_) => onItemSelect(),
-              value: isSelected,
-              activeColor:
-                  widget.decoration?.listItemDecoration?.selectedIconColor,
-              side: widget.decoration?.listItemDecoration?.selectedIconBorder,
-              shape: widget.decoration?.listItemDecoration?.selectedIconShape,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: const VisualDensity(
-                horizontal: VisualDensity.minimumDensity,
-                vertical: VisualDensity.minimumDensity,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget defaultHeaderBuilder(BuildContext context, {T? item, List<T>? items}) {
-    return Text(
-      items != null ? items.join(', ') : item.toString(),
-      maxLines: widget.maxLines,
-      overflow: TextOverflow.ellipsis,
-      style: widget.headerStyle ??
-          const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-    );
-  }
-
-  Widget defaultHintBuilder(BuildContext context, String hint) {
-    return Text(
-      hint,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: widget.hintStyle ??
-          const TextStyle(
-            fontSize: 16,
-            color: Color(0xFFA7A7A7),
-          ),
-    );
-  }
-
-  Widget defaultNoResultFoundBuilder(BuildContext context, String text) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12.0),
-        child: Text(
-          text,
-          style: widget.noResultFoundStyle ?? const TextStyle(fontSize: 16),
-        ),
-      ),
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    scrollController = widget.itemsScrollCtrl ?? ScrollController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final render1 = key1.currentContext?.findRenderObject() as RenderBox;
-      final render2 = key2.currentContext?.findRenderObject() as RenderBox;
-      final screenHeight = MediaQuery.of(context).size.height;
-      double y = render1.localToGlobal(Offset.zero).dy;
-      if (screenHeight - y < render2.size.height) {
-        displayOverlayBottom = false;
-        setState(() {});
-      }
-    });
-
-    selectedItem = widget.selectedItemNotifier.value;
-    selectedItems = widget.selectedItemsNotifier.value;
-
-    widget.selectedItemNotifier.addListener(singleSelectListener);
-    widget.selectedItemsNotifier.addListener(multiSelectListener);
-
-    if (widget.excludeSelected &&
-        widget.items.length > 1 &&
-        selectedItem != null) {
-      T value = selectedItem as T;
-      items = widget.items.where((item) => item != value).toList();
-    } else {
-      items = widget.items;
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.selectedItemNotifier.removeListener(singleSelectListener);
-    widget.selectedItemsNotifier.removeListener(multiSelectListener);
-
-    if (widget.itemsScrollCtrl == null) {
-      scrollController.dispose();
-    }
-    super.dispose();
-  }
-
-  void singleSelectListener() {
-    if (mounted) {
-      selectedItem = widget.selectedItemNotifier.value;
-    }
-  }
-
-  void multiSelectListener() {
-    if (mounted) {
-      selectedItems = widget.selectedItemsNotifier.value;
-    }
-  }
-
-  void onItemSelect(T value) {
-    widget.onItemSelect(value);
-    if (widget.dropdownType == _DropdownType.singleSelect) {
-      setState(() => displayOverly = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -337,18 +177,18 @@ class _DropdownOverlayState<T> extends State<_DropdownOverlay<T>> {
                         },
                         child: Theme(
                           data: Theme.of(context).copyWith(
-                            scrollbarTheme: decoration
-                                    ?.overlayScrollbarDecoration ??
-                                ScrollbarThemeData(
-                                  thumbVisibility: MaterialStateProperty.all(
-                                    true,
-                                  ),
-                                  thickness: MaterialStateProperty.all(5),
-                                  radius: const Radius.circular(4),
-                                  thumbColor: MaterialStateProperty.all(
-                                    Colors.grey[300],
-                                  ),
-                                ),
+                            scrollbarTheme:
+                                decoration?.overlayScrollbarDecoration ??
+                                    ScrollbarThemeData(
+                                      thumbVisibility: WidgetStateProperty.all(
+                                        true,
+                                      ),
+                                      thickness: WidgetStateProperty.all(5),
+                                      radius: const Radius.circular(4),
+                                      thumbColor: WidgetStateProperty.all(
+                                        Colors.grey[300],
+                                      ),
+                                    ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +222,6 @@ class _DropdownOverlayState<T> extends State<_DropdownOverlay<T>> {
                                                   : hintBuilder(context),
                                           },
                                         ),
-                                        const SizedBox(width: 12),
                                         decoration?.expandedSuffixIcon ??
                                             _defaultOverlayIconUp,
                                       ],
@@ -433,7 +272,6 @@ class _DropdownOverlayState<T> extends State<_DropdownOverlay<T>> {
                                           ),
                                           decoration?.expandedSuffixIcon ??
                                               _defaultOverlayIconUp,
-                                          const SizedBox(width: 14),
                                         ],
                                       ),
                                     ),
@@ -506,7 +344,6 @@ class _DropdownOverlayState<T> extends State<_DropdownOverlay<T>> {
                                           ),
                                           decoration?.expandedSuffixIcon ??
                                               _defaultOverlayIconUp,
-                                          const SizedBox(width: 14),
                                         ],
                                       ),
                                     ),
@@ -560,5 +397,165 @@ class _DropdownOverlayState<T> extends State<_DropdownOverlay<T>> {
     }
 
     return child;
+  }
+
+  Widget defaultHeaderBuilder(BuildContext context, {T? item, List<T>? items}) {
+    return Text(
+      items != null ? items.join(', ') : item.toString(),
+      maxLines: widget.maxLines,
+      overflow: TextOverflow.ellipsis,
+      style: widget.headerStyle ??
+          const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+    );
+  }
+
+  Widget defaultHintBuilder(BuildContext context, String hint) {
+    return Text(
+      hint,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: widget.hintStyle ??
+          const TextStyle(
+            fontSize: 16,
+            color: Color(0xFFA7A7A7),
+          ),
+    );
+  }
+
+  Widget defaultListItemBuilder(
+    BuildContext context,
+    T result,
+    bool isSelected,
+    VoidCallback onItemSelect,
+  ) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            result.toString(),
+            maxLines: widget.maxLines,
+            overflow: TextOverflow.ellipsis,
+            style: widget.listItemStyle ?? const TextStyle(fontSize: 16),
+          ),
+        ),
+        if (widget.dropdownType == _DropdownType.multipleSelect)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 12.0),
+            child: Checkbox(
+              onChanged: (_) => onItemSelect(),
+              value: isSelected,
+              activeColor:
+                  widget.decoration?.listItemDecoration?.selectedIconColor,
+              side: widget.decoration?.listItemDecoration?.selectedIconBorder,
+              shape: widget.decoration?.listItemDecoration?.selectedIconShape,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: const VisualDensity(
+                horizontal: VisualDensity.minimumDensity,
+                vertical: VisualDensity.minimumDensity,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget defaultNoResultFoundBuilder(BuildContext context, String text) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        child: Text(
+          text,
+          style: widget.noResultFoundStyle ?? const TextStyle(fontSize: 16),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    widget.selectedItemNotifier.removeListener(singleSelectListener);
+    widget.selectedItemsNotifier.removeListener(multiSelectListener);
+
+    if (widget.itemsScrollCtrl == null) {
+      scrollController.dispose();
+    }
+    super.dispose();
+  }
+
+  Widget headerBuilder(BuildContext context) {
+    return widget.headerBuilder != null
+        ? widget.headerBuilder!(context, selectedItem as T, true)
+        : defaultHeaderBuilder(context, item: selectedItem);
+  }
+
+  Widget headerListBuilder(BuildContext context) {
+    return widget.headerListBuilder != null
+        ? widget.headerListBuilder!(context, selectedItems, true)
+        : defaultHeaderBuilder(context, items: selectedItems);
+  }
+
+  Widget hintBuilder(BuildContext context) {
+    return widget.hintBuilder != null
+        ? widget.hintBuilder!(context, widget.hintText, true)
+        : defaultHintBuilder(context, widget.hintText);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    scrollController = widget.itemsScrollCtrl ?? ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final render1 = key1.currentContext?.findRenderObject() as RenderBox;
+      final render2 = key2.currentContext?.findRenderObject() as RenderBox;
+      final screenHeight = MediaQuery.of(context).size.height;
+      double y = render1.localToGlobal(Offset.zero).dy;
+      if (screenHeight - y < render2.size.height) {
+        displayOverlayBottom = false;
+        setState(() {});
+      }
+    });
+
+    selectedItem = widget.selectedItemNotifier.value;
+    selectedItems = widget.selectedItemsNotifier.value;
+
+    widget.selectedItemNotifier.addListener(singleSelectListener);
+    widget.selectedItemsNotifier.addListener(multiSelectListener);
+
+    if (widget.excludeSelected &&
+        widget.items.length > 1 &&
+        selectedItem != null) {
+      T value = selectedItem as T;
+      items = widget.items.where((item) => item != value).toList();
+    } else {
+      items = widget.items;
+    }
+  }
+
+  void multiSelectListener() {
+    if (mounted) {
+      selectedItems = widget.selectedItemsNotifier.value;
+    }
+  }
+
+  Widget noResultFoundBuilder(BuildContext context) {
+    return widget.noResultFoundBuilder != null
+        ? widget.noResultFoundBuilder!(context, widget.noResultFoundText)
+        : defaultNoResultFoundBuilder(context, widget.noResultFoundText);
+  }
+
+  void onItemSelect(T value) {
+    widget.onItemSelect(value);
+    if (widget.dropdownType == _DropdownType.singleSelect) {
+      setState(() => displayOverly = false);
+    }
+  }
+
+  void singleSelectListener() {
+    if (mounted) {
+      selectedItem = widget.selectedItemNotifier.value;
+    }
   }
 }
