@@ -22,29 +22,6 @@ class _OverlayBuilderState extends State<_OverlayBuilder> {
   late OverlayPortalController overlayController;
 
   @override
-  void initState() {
-    super.initState();
-    overlayController =
-        widget.overlayPortalController ?? OverlayPortalController();
-  }
-
-  void showOverlay() {
-    overlayController.show();
-
-    if (widget.visibility != null) {
-      widget.visibility!(true);
-    }
-  }
-
-  void hideOverlay() {
-    overlayController.hide();
-
-    if (widget.visibility != null) {
-      widget.visibility!(false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return OverlayPortal(
       controller: overlayController,
@@ -55,5 +32,31 @@ class _OverlayBuilderState extends State<_OverlayBuilder> {
       },
       child: widget.child(showOverlay),
     );
+  }
+
+  void hideOverlay() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      overlayController.hide();
+    });
+    if (widget.visibility != null) {
+      widget.visibility!(false);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    overlayController =
+        widget.overlayPortalController ?? OverlayPortalController();
+  }
+
+  void showOverlay() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      overlayController.show();
+    });
+
+    if (widget.visibility != null) {
+      widget.visibility!(true);
+    }
   }
 }
